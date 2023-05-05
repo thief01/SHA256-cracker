@@ -9,185 +9,178 @@ from multiprocessing import Pool
 import math
 from concurrent.futures import ProcessPoolExecutor
 
+
 class Cracker:
 
-    def __init__(self, passwordHash, passwordCount, charactersAtEnd):
-        self.passwordHash = passwordHash
-        self.passwordCount = passwordCount
-        self.usingLettersSet = string.ascii_letters.strip()
-        self.usingLettersSet = string.ascii_lowercase.strip()
-        self.charactersCounts = len(self.usingLettersSet)
-        self.combinations = self.charactersCounts**passwordCount
-        self.charactersAtEnd = charactersAtEnd
-        self.stopAllThreads = False
-        self.checkedPasswords = 0
-        self.crackedPassword = ""
+    def __init__(self, password_hash, password_count, characters_at_end, using_letters_set):
+        self.password_hash = password_hash
+        self.password_count = password_count
+        self.using_letters_set = string.ascii_letters.strip()
+        self.using_letters_set = string.ascii_lowercase.strip()
+        self.characters_counts = len(self.using_letters_set)
+        self.combinations = self.characters_counts ** password_count
+        self.characters_at_end = characters_at_end
+        self.stop_all_threads = False
+        self.checked_passwords = 0
+        self.cracked_password = ""
         self.done = False
 
-        self.dividersForRests = [0] * self.passwordCount
-        for i in range(0,self.passwordCount):
-            self.dividersForRests[i] = self.charactersCounts ** (i + 1)
+        self.dividers_for_rests = [0] * self.password_count
+        for i in range(0, self.password_count):
+            self.dividers_for_rests[i] = self.characters_counts ** (i + 1)
 
+    def start_cracking_normal(self):
+        self.cracking_loop()
 
-    def StartCrackingNormal(self):
-        self.CrackingLoop()
+    def start_cracking_by_multi_tasking(self, threads):
 
-    def StartCrackingByMultiTasking(self, threads):
-
-        thread = threading.Thread(target=self.LogLoop)
+        thread = threading.Thread(target=self.log_loop)
         thread.start()
         ths = []
 
         for i in range(0, threads):
-            params = self.generateStartingParameters(i, threads)
-            self.printsStatingPositions(params, i)
-            tempThread = threading.Thread(target=self.CrackingLoop, args=(params,))
-            tempThread.start()
-            ths.append(tempThread)
+            params = self.generate_starting_parameters(i, threads)
+            self.prints_stating_positions(params, i)
+            temp_thread = threading.Thread(target=self.cracking_loop, args=(params,))
+            temp_thread.start()
+            ths.append(temp_thread)
 
         thread.join()
 
-    def StartSimpleTask(self):
-        self.CrackingLoop([0] * self.passwordCount)
+    def start_simple_task(self):
+        self.cracking_loop([0] * self.password_count)
 
-    def TestPool(self, threadId, threads):
-        args= self.generateStartingParameters(threadId, threads)
-        self.CrackingLoop(args)
+    def test_pool(self, thread_id, threads):
+        args = self.generate_starting_parameters(thread_id, threads)
+        self.cracking_loop(args)
 
-
-    def CrackingLoop(self, startingParameters: []):
-        passwordIds = startingParameters
+    def cracking_loop(self, starting_parameters: []):
+        password_ids = starting_parameters
         rounds = 0
 
         for i in range(0, self.combinations):
-            self.ComparePassword(self.GetPasswords(passwordIds))
-            if self.crackedPassword:
+            self.compare_password(self.get_passwords(password_ids))
+            if self.cracked_password:
                 break
 
             rounds += 1
-            self.checkedPasswords += 1
-            passwordIds[0] += 1
+            self.checked_passwords += 1
+            password_ids[0] += 1
             password = ""
-            for j in range(0, len(passwordIds)):
-                if passwordIds[j] >= len(self.usingLettersSet):
-                    passwordIds[j] = 0
-                    if j + 1 < len(passwordIds):
-                        passwordIds[j + 1] += 1
-    def StartReallyMultiThread(self, params: []):
+            for j in range(0, len(password_ids)):
+                if password_ids[j] >= len(self.using_letters_set):
+                    password_ids[j] = 0
+                    if j + 1 < len(password_ids):
+                        password_ids[j + 1] += 1
+
+    def start_really_multi_thread(self, params: []):
         if __name__ == '__main__':
             # report a message
             print('Starting task...')
             # create the process pool
             with ProcessPoolExecutor(8) as exe:
                 # perform calculations
-                exe.map(cracker.ComparePassword, range(1, self.combinations))
+                exe.map(cracker.compare_password, range(1, self.combinations))
             # report a message
             print('Done ALL COMBOSES.')
 
-    def LogLoop(self):
-        previousTime = time.perf_counter()
+    def log_loop(self):
+        previous_time = time.perf_counter()
         while True:
-            currentTime = time.perf_counter()
-            execution_time = currentTime - previousTime
+            current_time = time.perf_counter()
+            execution_time = current_time - previous_time
             if execution_time > 1:
-                print(f"Combinations {self.checkedPasswords}/{self.combinations} Progress:" , str(self.checkedPasswords / self.combinations * 100) + "%")
-                previousTime = time.perf_counter()
-            if self.crackedPassword:
+                print(f"Combinations {self.checked_passwords}/{self.combinations} Progress:",
+                      str(self.checked_passwords / self.combinations * 100) + "%")
+                previous_time = time.perf_counter()
+            if self.cracked_password:
                 break
-    def TestLoop(self):
-        previousTime = time.perf_counter()
+
+    def test_loop(self):
+        previous_time = time.perf_counter()
         id = 0
         while True:
-            currentTime = time.perf_counter()
-            execution_time = currentTime - previousTime
+            current_time = time.perf_counter()
+            execution_time = current_time - previous_time
             if execution_time > 0.00001:
                 id += 1
-                self.ComparePasswordWithNewRule(id)
-                previousTime = time.perf_counter()
-            if self.crackedPassword:
+                self.compare_password_with_new_rule(id)
+                previous_time = time.perf_counter()
+            if self.cracked_password:
                 break
 
-
-    def GetPasswords(self, generatedParameters):
+    def get_passwords(self, generated_parameters):
         text = ""
-        for i in range(0, self.passwordCount):
-            text += self.usingLettersSet[generatedParameters[i]]
+        for i in range(0, self.password_count):
+            text += self.using_letters_set[generated_parameters[i]]
         return text
 
-    def ComparePasswordWithNewRule(self, combinationId):
-        rests = [0] * self.passwordCount
-        dividers = [0] * self.passwordCount
-        toDivide = [0] * self.passwordCount
+    def compare_password_with_new_rule(self, combinationId):
+        rests = [0] * self.password_count
+        dividers = [0] * self.password_count
+        to_divide = [0] * self.password_count
 
         previousRest = combinationId
-        for i in reversed(range(0, len(self.dividersForRests))):
-            rests[i] = previousRest % self.dividersForRests[i]
-            dividers[i] = previousRest / self.dividersForRests[i]
-            if i+1 < len(self.dividersForRests):
+        for i in reversed(range(0, len(self.dividers_for_rests))):
+            rests[i] = previousRest % self.dividers_for_rests[i]
+            dividers[i] = previousRest / self.dividers_for_rests[i]
+            if i + 1 < len(self.dividers_for_rests):
                 if dividers[i] > 1:
-                    dividers[i+1] = int(dividers[i])
+                    dividers[i + 1] = int(dividers[i])
                 else:
-                    dividers[i+1] = 0
+                    dividers[i + 1] = 0
             if i == 0:
                 dividers[i] = rests[i]
             previousRest = rests[i]
         # print(combinationId)
-        # print(self.dividersForRests)
+        # print(self.dividers_for_rests)
         # print(rests)
         # print(dividers)
-        print(self.GetPasswords(dividers))
+        print(self.get_passwords(dividers))
         # self.crackedPassword = "XD"
         # self.done = False
 
+    def compare_password(self, generated_password) -> bool:
+        generated_password += self.characters_at_end
+        hash_object2 = hashlib.sha256(generated_password.encode())
+        new_hash = hash_object2.hexdigest()
 
-
-    def ComparePassword(self, generatedPassword) -> bool:
-        generatedPassword+= self.charactersAtEnd
-        hash_object2 = hashlib.sha256(generatedPassword.encode())
-        newHash = hash_object2.hexdigest()
-
-        if newHash == self.passwordHash:
-            self.stopAllThreads = True
-            self.crackedPassword = generatedPassword
-            print("Password got breaked:", generatedPassword)
+        if new_hash == self.password_hash:
+            self.stop_all_threads = True
+            self.cracked_password = generated_password
+            print("Password got breaked:", generated_password)
             return True
         return False
 
-    def ComparePasswordWithCurrent(self, generatedPassword):
-        generatedPassword+= self.charactersAtEnd
+    def compare_password_with_current(self, generatedPassword):
+        generatedPassword += self.characters_at_end
         hash_object2 = hashlib.sha256(generatedPassword.encode())
-        newHash = hash_object2.hexdigest()
-        print(newHash)
-        print(newHash == self.passwordHash)
+        new_hash = hash_object2.hexdigest()
+        print(new_hash)
+        print(new_hash == self.password_hash)
 
-    def generateStartingParameters(self, threadId, maxThreads) -> []:
-        if threadId == 0:
-            params = [0] * self.passwordCount
+    def generate_starting_parameters(self, thread_id, max_threads) -> []:
+        if thread_id == 0:
+            params = [0] * self.password_count
             return params
-        params = [0] * (self.passwordCount-1)
-        everyThread = self.charactersCounts / maxThreads
-        everyThread = int(everyThread)
-        lastParam = threadId * everyThread
-        if threadId * everyThread >= self.charactersCounts:
-            lastParam = self.charactersCounts-1
-        params.append(lastParam)
+        params = [0] * (self.password_count - 1)
+        every_thread = self.characters_counts / max_threads
+        every_thread = int(every_thread)
+        last_param = thread_id * every_thread
+        if thread_id * every_thread >= self.characters_counts:
+            last_param = self.characters_counts - 1
+        params.append(last_param)
         return params
 
-    def printsStatingPositions(self, params, id):
+    def prints_stating_positions(self, params, id):
         text = ""
         for i in range(0, len(params)):
-            text += self.usingLettersSet[params[i]]
+            text += self.using_letters_set[params[i]]
         print("Started with:", text, "at thread ID:", id)
-
-
-
-
 
 
 # cracker = Cracker("08cf04af4d3b7e903cb15582d02b7fce682f867f04e9b9a82ea719f6e7ecad63", 3, "")
 cracker = Cracker("8338482d1dc4f7d3447b41fa646b354c2dce447c3028d087561d856a2b99d47b", 6, "ia!")
 # cracker.ComparePasswordWithCurrent("xdd")
 
-cracker.StartCrackingByMultiTasking(10)
-
-
+cracker.start_cracking_by_multi_tasking(10)
