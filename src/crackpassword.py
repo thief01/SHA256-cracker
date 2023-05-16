@@ -1,16 +1,13 @@
-import itertools
 import string
 import hashlib
 import threading
-import time
-
 import sys
 import time
-from colorama import Fore, Style
+from colorama import Fore
 
+# TODO: Add known characters, for now we can add known characters at the end.
 
 class Cracker:
-
     def __init__(self, password_hash, password_count, characters_at_end, using_letters_set):
         # Configurations
         self.password_hash = password_hash
@@ -28,7 +25,6 @@ class Cracker:
         self.dividers_for_rests = [0] * self.password_count
         for i in range(0, self.password_count):
             self.dividers_for_rests[i] = self.characters_counts ** (i + 1)
-
 
     def start_cracking_by_multi_tasking(self, threads: int):
         thread = threading.Thread(target=self.log_loop)
@@ -62,7 +58,6 @@ class Cracker:
                         password_ids[j + 1] += 1
 
     def log_loop(self):
-
         while not self.cracked_password:
             for symbol in ['|', '/', '-', '\\']:
                 if self.cracked_password:
