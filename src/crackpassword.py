@@ -29,6 +29,7 @@ class Cracker:
         for i in range(0, self.password_count):
             self.dividers_for_rests[i] = self.characters_counts ** (i + 1)
 
+
     def start_cracking_by_multi_tasking(self, threads: int):
         thread = threading.Thread(target=self.log_loop)
         ths = []
@@ -54,7 +55,6 @@ class Cracker:
             rounds += 1
             self.checked_passwords += 1
             password_ids[0] += 1
-            password = ""
             for j in range(0, len(password_ids)):
                 if password_ids[j] >= len(self.using_letters_set):
                     password_ids[j] = 0
@@ -67,7 +67,8 @@ class Cracker:
             for symbol in ['|', '/', '-', '\\']:
                 if self.cracked_password:
                     break
-                sys.stdout.write(Fore.RED + "\r" + f"{symbol} Progress: {self.checked_passwords}/{self.combinations} {self.checked_passwords/ self.combinations * 100}% {symbol}")
+                sys.stdout.write(Fore.RED + "\r" + f"{symbol} Progress: {self.checked_passwords}/{self.combinations}"
+                + f" {round(self.checked_passwords/ self.combinations * 100, 2)}% {symbol}")
                 sys.stdout.flush()
                 time.sleep(0.2)
 
@@ -103,7 +104,7 @@ class Cracker:
         if new_hash == self.password_hash:
             self.stop_all_threads = True
             self.cracked_password = generated_password
-            print(f"Password got broken by {thread_id}:", generated_password)
+            print(Fore.GREEN + f"\nPassword got broken by thread {thread_id}:", generated_password)
             return True
         return False
 
@@ -138,4 +139,4 @@ class Cracker:
 cracker = Cracker("8338482d1dc4f7d3447b41fa646b354c2dce447c3028d087561d856a2b99d47b", 6, "ia!", string.ascii_lowercase.strip())
 # cracker.ComparePasswordWithCurrent("xdd")
 
-cracker.start_cracking_by_multi_tasking(5)
+cracker.start_cracking_by_multi_tasking(6)
